@@ -55,10 +55,10 @@ GTP_main( void )
 
     for (i = 0; i < GTP_COMMAND_NUM; i++) {
       if (!strcmp(command, gtpcmd[i].command)) {
-	StopPondering();
-	(*gtpcmd[i].function)();
-	nocommand = false;
-	break;
+      	StopPondering();
+      	(*gtpcmd[i].function)();
+      	nocommand = false;
+      	break;
       }
     }
 
@@ -472,7 +472,6 @@ GTP_timeleft( void )
   str1 = STRTOK(NULL, DELIM, &next_token);
   str2 = STRTOK(NULL, DELIM, &next_token);
 
-  
   if (str1[0] == 'B' || str1[0] == 'b'){
     remaining_time[S_BLACK] = atof(str2);
   } else if (str1[0] == 'W' || str1[0] == 'w'){
@@ -736,31 +735,31 @@ GTP_final_status_list( void )
   if (!strcmp(command, "dead")){
     for (y = board_start; y <= board_end; y++) {
       for (x = board_start; x <= board_end; x++) {
-	if ((game->board[POS(x, y)] == player_color && owner[POS(x, y)] <= 30) ||
-	    (game->board[POS(x, y)] == FLIP_COLOR(player_color) && owner[POS(x, y)] >= 70)) {
-#if defined (_WIN32)
-	  sprintf_s(pos, 5, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
-	  strcat_s(dead, 2048, pos);
-#else
-	  sprintf(pos, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
-	  strcat(dead, pos);
-#endif
-	}
+      	if ((game->board[POS(x, y)] == player_color && owner[POS(x, y)] <= 30) ||
+      	    (game->board[POS(x, y)] == FLIP_COLOR(player_color) && owner[POS(x, y)] >= 70)) {
+      #if defined (_WIN32)
+      	  sprintf_s(pos, 5, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
+      	  strcat_s(dead, 2048, pos);
+      #else
+      	  sprintf(pos, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
+      	  strcat(dead, pos);
+      #endif
+      	}
       }
     }
   } else if (!strcmp(command, "alive")){
     for (y = board_start; y <= board_end; y++) {
       for (x = board_start; x <= board_end; x++) {
-	if ((game->board[POS(x, y)] == player_color && owner[POS(x, y)] >= 70) ||
-	    (game->board[POS(x, y)] == FLIP_COLOR(player_color) && owner[POS(x, y)] <= 30)) {
-#if defined (_WIN32)
-	  sprintf_s(pos, 5, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
-	  strcat_s(dead, 2048, pos);
-#else
-	  sprintf(pos, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
-	  strcat(dead, pos);
-#endif
-	}
+      	if ((game->board[POS(x, y)] == player_color && owner[POS(x, y)] >= 70) ||
+      	    (game->board[POS(x, y)] == FLIP_COLOR(player_color) && owner[POS(x, y)] <= 30)) {
+      #if defined (_WIN32)
+      	  sprintf_s(pos, 5, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
+      	  strcat_s(dead, 2048, pos);
+      #else
+      	  sprintf(pos, "%c%d ", GOGUI_X(POS(x, y)), GOGUI_Y(POS(x, y)));
+      	  strcat(dead, pos);
+      #endif
+      	}
       }
     }
   }

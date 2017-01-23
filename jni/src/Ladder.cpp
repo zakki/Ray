@@ -24,7 +24,7 @@ LadderExtension( const game_info_t *game, int color, bool *ladder_pos )
 
   for (i = 0; i < MAX_STRING; i++) {
     if (!string[i].flag ||
-	string[i].color != color) {
+	    string[i].color != color) {
       continue;
     }
     // アタリから逃げる着手箇所

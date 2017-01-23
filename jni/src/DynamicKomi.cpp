@@ -32,7 +32,7 @@ SetHandicapNum( int num )
   if (const_handicap_num == 0) {
     handicap_num = num;
     if (dk_mode != DK_OFF && 
-	handicap_num == 0) {
+	       handicap_num == 0) {
       dk_mode = DK_OFF;
     } else if (dk_mode == DK_OFF &&
 	       handicap_num != 0) {
@@ -53,13 +53,13 @@ DynamicKomi( game_info_t *game, uct_node_t *root, int color )
   if (handicap_num != 0) {
     switch(dk_mode) {
       case DK_LINEAR:
-	LinearHandicap(game);
-	break;
+      	LinearHandicap(game);
+      	break;
       case DK_VALUE:
-	ValueSituational(root, color);
-	break;
+      	ValueSituational(root, color);
+      	break;
       default:
-	break;
+	      break;
     }
   }
 }

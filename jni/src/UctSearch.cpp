@@ -660,8 +660,8 @@ ExpandRoot(game_info_t *game, int color)
       pos = onboard_pos[i];
       // 探索候補かつ合法手であれば探索対象にする
       if (candidates[pos] && IsLegal(game, pos, color)) {
-  InitializeCandidate(&uct_child[child_num], pos, ladder[pos]);
-  child_num++;
+        InitializeCandidate(&uct_child[child_num], pos, ladder[pos]);
+        child_num++;
       }
     }
     
@@ -866,7 +866,6 @@ RatingNode(game_info_t *game, int color, int index)
     if ((uct_features.tactical_features1[pos] & uct_mask[UCT_OIOTOSHI]) > 0) {
       uct_child[i].open = true;
     }
-
   }
 
   // 最もγが大きい着手を探索できるようにする
@@ -1198,9 +1197,9 @@ SelectMaxUcbChild(int current, int color)
     for (i = 0; i < child_num; i++) {
       pos = uct_child[i].pos;
       if (pos == PASS) {
-  dynamic_parameter = 0.0;
+        dynamic_parameter = 0.0;
       } else {
-  dynamic_parameter = uct_owner[o_index[i]] + uct_criticality[c_index[i]];
+        dynamic_parameter = uct_owner[o_index[i]] + uct_criticality[c_index[i]];
       }
       order[i].rate = uct_child[i].rate + dynamic_parameter;
       order[i].index = i;
@@ -1478,7 +1477,7 @@ UctAnalyze( game_info_t *game, int color )
   for (i = 0; i < threads; i++) {
     handle[i]->join();
     delete handle[i];
-	handle[i] = nullptr;
+	  handle[i] = nullptr;
   }
 
   int x, y, black = 0, white = 0;
@@ -1489,9 +1488,9 @@ UctAnalyze( game_info_t *game, int color )
       pos = POS(x, y);
       own = (double)statistic[pos].colors[S_BLACK] / uct_node[current_root].move_count;
       if (own > 0.5) {
-  black++;
+        black++;
       } else {
-  white++;
+        white++;
       }
     }
   }
@@ -1583,7 +1582,7 @@ UctSearchGenmoveCleanUp( game_info_t *game, int color )
   for (i = 0; i < threads; i++) {
     handle[i]->join();
     delete handle[i];
-	handle[i] = nullptr;
+	  handle[i] = nullptr;
   }
 
   uct_child = uct_node[current_root].child;

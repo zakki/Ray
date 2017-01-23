@@ -43,11 +43,11 @@ const string errmessage[COMMAND_MAX] = {
   "Set tree size (tree size must be 2 ^ n)",
   "Prohibit any debug message",
   "No early pass",
-  "set the parameter directory",
+  "set the parameters directory",
 };
 
 //////////////////////
-//  ƒRƒ}ƒ“ƒh‚Ìˆ—  //
+//  コマンドライン引数の解析    //
 //////////////////////
 void
 AnalyzeCommand( int argc, char **argv )
@@ -114,7 +114,6 @@ AnalyzeCommand( int argc, char **argv )
         char program_path[1024];
         int last;
 
-        // ŽÀsƒtƒ@ƒCƒ‹‚Ì‚ ‚éƒfƒBƒŒƒNƒgƒŠ‚ÌƒpƒX‚ð’Šo
         strcpy(program_path, argv[++i]);
         last = (int)strlen(program_path);
         while (last--){

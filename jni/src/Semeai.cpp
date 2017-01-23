@@ -123,13 +123,13 @@ CapturableCandidate( game_info_t *game, int id )
   while (neighbor != NEIGHBOR_END) {
     if (string[neighbor].libs == 1) {
       if (string[neighbor].size >= 2) {
-	return -1;
+	      return -1;
       } else {
-	if (flag) {
-	  return -1;
-	}
-	capturable_pos = string[neighbor].lib[0];
-	flag = true;
+      	if (flag) {
+      	  return -1;
+      	}
+      	capturable_pos = string[neighbor].lib[0];
+      	flag = true;
       }
     }
     neighbor = string[id].neighbor[neighbor];

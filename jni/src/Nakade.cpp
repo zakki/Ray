@@ -332,8 +332,8 @@ IsNakadeSelfAtari( game_info_t *game, int pos, int color )
     if (checked[0] != id) {
       my_stone = string[id].origin;
       while (my_stone != STRING_END) {
-	stones[n++] = my_stone;
-	my_stone = string_next[my_stone];
+      	stones[n++] = my_stone;
+      	my_stone = string_next[my_stone];
       }
       checked[check++] = id;
     }
@@ -345,8 +345,8 @@ IsNakadeSelfAtari( game_info_t *game, int pos, int color )
     if (checked[0] != id && checked[1] != id) {
       my_stone = string[id].origin;
       while (my_stone != STRING_END) {
-	stones[n++] = my_stone;
-	my_stone = string_next[my_stone];
+      	stones[n++] = my_stone;
+      	my_stone = string_next[my_stone];
       }
       checked[check++] = id;
     }
@@ -358,8 +358,8 @@ IsNakadeSelfAtari( game_info_t *game, int pos, int color )
     if (checked[0] != id && checked[1] != id && checked[2] != id) {
       my_stone = string[id].origin;
       while (my_stone != STRING_END) {
-	stones[n++] = my_stone;
-	my_stone = string_next[my_stone];
+      	stones[n++] = my_stone;
+      	my_stone = string_next[my_stone];
       }
       checked[check++] = id;
     }
@@ -504,28 +504,28 @@ IsUctNakadeSelfAtari( game_info_t *game, int pos, int color )
   case 3:
     for (i = 0; i < 6; i++) {
       if (nakade3_hash[i] == hash) {
-	return true;
+	      return true;
       }
     }
     break;
   case 4:
     for (i = 0; i < 5; i++) {
       if (nakade4_hash[i] == hash) {
-	return true;
+	      return true;
       }
     }
     break;
   case 5:
     for (i = 0; i < 9; i++) {
       if (nakade5_hash[i] == hash) {
-	return true;
+	      return true;
       }
     }
     break;
   case 6:
     for (i = 0; i < 4; i++) {
       if (nakade6_hash[i] == hash) {
-	return true;
+	      return true;
       }
     }
     break;
@@ -570,7 +570,7 @@ FindNakadePos( game_info_t *game, int pos, int color )
 
     // 上が未確認で, 自分の石か空点なら追加
     if (!flag[NORTH(current_pos)] &&
-  (board[NORTH(current_pos)] & color) == 0) {
+      (board[NORTH(current_pos)] & color) == 0) {
       Enqueue(&nakade_queue, NORTH(current_pos));
       flag[NORTH(current_pos)] = true;
       size++;
@@ -578,7 +578,7 @@ FindNakadePos( game_info_t *game, int pos, int color )
 
     // 左が未確認で, 自分の石か空点なら追加
     if (!flag[WEST(current_pos)] &&
-	(board[WEST(current_pos)] & color) == 0) {
+	    (board[WEST(current_pos)] & color) == 0) {
       Enqueue(&nakade_queue, WEST(current_pos));
       flag[WEST(current_pos)] = true;
       size++;
@@ -586,7 +586,7 @@ FindNakadePos( game_info_t *game, int pos, int color )
 
     // 右が未確認で, 自分の石か空点なら追加
     if (!flag[EAST(current_pos)] &&
-  (board[EAST(current_pos)] & color) == 0) {
+      (board[EAST(current_pos)] & color) == 0) {
       Enqueue(&nakade_queue, EAST(current_pos));
       flag[SOUTH(current_pos)] = true;
       size++;
@@ -594,7 +594,7 @@ FindNakadePos( game_info_t *game, int pos, int color )
 
     // 下が未確認で, 自分の石か空点なら追加
     if (!flag[SOUTH(current_pos)] &&
-	(board[SOUTH(current_pos)] & color) == 0) {
+	    (board[SOUTH(current_pos)] & color) == 0) {
       Enqueue(&nakade_queue, SOUTH(current_pos));
       flag[SOUTH(current_pos)] = true;
       size++;
@@ -620,26 +620,25 @@ FindNakadePos( game_info_t *game, int pos, int color )
   case 3:
     for (i = 0; i < 6; i++) {
       if (nakade3_hash[i] == hash) {
-	return nakade[0] + nakade3_pos[i];
+	      return nakade[0] + nakade3_pos[i];
       }
     }
     break;
   case 4:
     for (i = 0; i < 4; i++) {
       if (nakade4_hash[i] == hash) {
-	return nakade[0] + nakade4_pos[i];
+	      return nakade[0] + nakade4_pos[i];
       }
     }
     break;
   case 5:
     for (i = 0; i < 9; i++) {
       if (nakade5_hash[i] == hash) {
-	return nakade[0] + nakade5_pos[i];
+	      return nakade[0] + nakade5_pos[i];
       }
     }
     break;
   }
-
 
   return NOT_NAKADE;
 }
@@ -715,21 +714,21 @@ CheckRemovedStoneNakade( game_info_t *game, int color )
   case 3:
     for (i = 0; i < 6; i++) {
       if (nakade3_hash[i] == hash) {
-	return capture_pos[0] + nakade3_pos[i];
+	      return capture_pos[0] + nakade3_pos[i];
       }
     }
     break;
   case 4:
     for (i = 0; i < 4; i++) {
       if (nakade4_hash[i] == hash) {
-	return capture_pos[0] + nakade4_pos[i];
+	      return capture_pos[0] + nakade4_pos[i];
       }
     }
     break;
   case 5:
     for (i = 0; i < 9; i++) {
       if (nakade5_hash[i] == hash) {
-	return capture_pos[0] + nakade5_pos[i];
+	      return capture_pos[0] + nakade5_pos[i];
       }
     }
     break;

@@ -685,22 +685,22 @@ UctCheckCapture( game_info_t *game, int color, int pos, uct_features_t *uct_feat
   for (i = 0; i < 4; i++) {
     if (board[neighbor4[i]] == other) {
       if (string[string_id[neighbor4[i]]].libs == 1) {
-	check = false;
-	id = string_id[neighbor4[i]];
-	neighbor = string[id].neighbor[0];
-	while (neighbor != NEIGHBOR_END) {
-	  if (string[neighbor].libs == 1) {
-	    check = true;
-	    break;
-	  }
-	  neighbor = string[id].neighbor[neighbor];
-	}
-	if (check) {
-	  tactical_features1[pos] |= uct_mask[UCT_SEMEAI_CAPTURE];
-	  return;
-	} else {
-	  tactical_features1[pos] |= uct_mask[UCT_CAPTURE];
-	}
+      	check = false;
+      	id = string_id[neighbor4[i]];
+      	neighbor = string[id].neighbor[0];
+      	while (neighbor != NEIGHBOR_END) {
+      	  if (string[neighbor].libs == 1) {
+      	    check = true;
+      	    break;
+      	  }
+      	  neighbor = string[id].neighbor[neighbor];
+      	}
+      	if (check) {
+      	  tactical_features1[pos] |= uct_mask[UCT_SEMEAI_CAPTURE];
+      	  return;
+      	} else {
+      	  tactical_features1[pos] |= uct_mask[UCT_CAPTURE];
+      	}
       }
     }
   }
@@ -1037,7 +1037,7 @@ UctCheckSnapBack( game_info_t *game, int color, int pos, uct_features_t *uct_fea
     if (board[neighbor4[i]] == other) {
       id = string_id[neighbor4[i]];
       if ((!put && string[id].libs == 2) ||
-	  (put && string[id].libs == 1)) {
+	       (put && string[id].libs == 1)) {
       	if (!put) {
       	  CopyGame(&snapback_game, game);
       	  PutStone(&snapback_game, pos, color);
@@ -1137,7 +1137,7 @@ CalculateLFRScore( game_info_t *game, int pos, int index[3], uct_features_t *uct
     for (i = 0; i < feature_num; i++) {
       tmp_score = 0.0;
       for (j = i + 1; j < feature_num; j++) {
-	tmp_score += all_feature[j]->v[f];
+	      tmp_score += all_feature[j]->v[f];
       }
       score += tmp_score * all_feature[i]->v[f];
     }
@@ -1297,7 +1297,7 @@ InputLatentFactor( const char *filename, latent_factor_t *lf, int n )
     for (j = 0; j < LFR_DIMENSION; j++) {
       if (fscanf_s(fp, "%lf", &lf[i].v[j]) == EOF) {
         cerr << "Read Error : " << filename << endl;
-	exit(1);
+	      exit(1);
       }
     }
   }
@@ -1340,7 +1340,7 @@ InputPat3( const char *filename, latent_factor_t *lf )
     if (pat3_index[pat3] == -1) {
       Pat3Transpose16(pat3, pat3_transp16);
       for (i = 0; i < 16; i++) {
-	pat3_index[pat3_transp16[i]] = idx;
+	      pat3_index[pat3_transp16[i]] = idx;
       }
       idx++;
     }
@@ -1411,7 +1411,7 @@ InputMD2( const char *filename, latent_factor_t *lf )
     if (md2_index[md2] == -1) {
       MD2Transpose16(md2, md2_transp16);
       for (i = 0; i < 16; i++) {
-	md2_index[md2_transp16[i]] = idx;
+	      md2_index[md2_transp16[i]] = idx;
       }
       idx++;
     }

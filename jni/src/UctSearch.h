@@ -239,4 +239,5 @@ int UctSearchGenmoveCleanUp( game_info_t *game, int color );
 void SetReuseSubtree( bool flag );
 
 int RateComp( const void *a, const void *b );
+
 #endif

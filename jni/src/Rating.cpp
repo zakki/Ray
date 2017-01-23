@@ -351,13 +351,13 @@ NeighborUpdate( game_info_t *game, int color, long long *sum_rate, long long *su
   if (index == 1) {
     pos = game->record[game->moves - 1].pos;
     if ((border_dis_x[pos] == 1 && border_dis_y[pos] == 2) ||
-	(border_dis_x[pos] == 2 && border_dis_y[pos] == 1)) {
+	    (border_dis_x[pos] == 2 && border_dis_y[pos] == 1)) {
       for (i = 0; i < 4; i++) {
-	if ((border_dis_x[update[i]] == 1 && border_dis_y[update[i]] == 2) ||
-	    (border_dis_x[update[i]] == 2 && border_dis_y[update[i]] == 1)) {
-	  bias[i] = 1000.0;
-	  break;
-	}
+      	if ((border_dis_x[update[i]] == 1 && border_dis_y[update[i]] == 2) ||
+      	    (border_dis_x[update[i]] == 2 && border_dis_y[update[i]] == 1)) {
+      	  bias[i] = 1000.0;
+      	  break;
+      	}
       }
     }
   }
@@ -1153,17 +1153,17 @@ PoCheckSelfAtari( game_info_t *game, int color, int pos )
     count = 0;
     while (lib != LIBERTY_END) {
       if (lib != pos) {
-	checked = false;
-	for (i = 0; i < libs; i++) {
-	  if (lib_candidate[i] == lib) {
-	    checked = true;
-	    break;
-	  }
-	}
-	if (!checked) {
-	  lib_candidate[libs + count] = lib;
-	  count++;
-	}
+      	checked = false;
+      	for (i = 0; i < libs; i++) {
+      	  if (lib_candidate[i] == lib) {
+      	    checked = true;
+      	    break;
+      	  }
+      	}
+      	if (!checked) {
+      	  lib_candidate[libs + count] = lib;
+      	  count++;
+      	}
       }
       lib = string[id].lib[lib];
     }
@@ -1184,20 +1184,20 @@ PoCheckSelfAtari( game_info_t *game, int color, int pos )
       lib = string[id].lib[0];
       count = 0;
       while (lib != LIBERTY_END) {
-	if (lib != pos) {
-	  checked = false;
-	  for (i = 0; i < libs; i++) {
-	    if (lib_candidate[i] == lib) {
-	      checked = true;
-	      break;
-	    }
-	  }
-	  if (!checked) {
-	    lib_candidate[libs + count] = lib;
-	    count++;
-	  }
-	}
-	lib = string[id].lib[lib];
+      	if (lib != pos) {
+      	  checked = false;
+      	  for (i = 0; i < libs; i++) {
+      	    if (lib_candidate[i] == lib) {
+      	      checked = true;
+      	      break;
+      	    }
+      	  }
+      	  if (!checked) {
+      	    lib_candidate[libs + count] = lib;
+      	    count++;
+      	  }
+      	}
+	      lib = string[id].lib[lib];
       }
       libs += count;
       size += string[id].size;
@@ -1217,20 +1217,20 @@ PoCheckSelfAtari( game_info_t *game, int color, int pos )
       lib = string[id].lib[0];
       count = 0;
       while (lib != LIBERTY_END) {
-	if (lib != pos) {
-	  checked = false;
-	  for (i = 0; i < libs; i++) {
-	    if (lib_candidate[i] == lib) {
-	      checked = true;
-	      break;
-	    }
-	  }
-	  if (!checked) {
-	    lib_candidate[libs + count] = lib;
-	    count++;
-	  }
-	}
-	lib = string[id].lib[lib];
+      	if (lib != pos) {
+      	  checked = false;
+      	  for (i = 0; i < libs; i++) {
+      	    if (lib_candidate[i] == lib) {
+      	      checked = true;
+      	      break;
+      	    }
+      	  }
+      	  if (!checked) {
+      	    lib_candidate[libs + count] = lib;
+      	    count++;
+      	  }
+      	}
+      	lib = string[id].lib[lib];
       }
       libs += count;
       size += string[id].size;
@@ -1250,20 +1250,20 @@ PoCheckSelfAtari( game_info_t *game, int color, int pos )
       lib = string[id].lib[0];
       count = 0;
       while (lib != LIBERTY_END) {
-	if (lib != pos) {
-	  checked = false;
-	  for (i = 0; i < libs; i++) {
-	    if (lib_candidate[i] == lib) {
-	      checked = true;
-	      break;
-	    }
-	  }
-	  if (!checked) {
-	    lib_candidate[libs + count] = lib;
-	    count++;
-	  }
-	}
-	lib = string[id].lib[lib];
+      	if (lib != pos) {
+      	  checked = false;
+      	  for (i = 0; i < libs; i++) {
+      	    if (lib_candidate[i] == lib) {
+      	      checked = true;
+      	      break;
+      	    }
+      	  }
+      	  if (!checked) {
+      	    lib_candidate[libs + count] = lib;
+      	    count++;
+      	  }
+      	}
+      	lib = string[id].lib[lib];
       }
       libs += count;
       size += string[id].size;
