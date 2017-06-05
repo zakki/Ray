@@ -2483,16 +2483,13 @@ static std::vector<float> eval_input_data_komi;
 void EvalNode() {
 #if 1
   while (true) {
-    LOCK_EXPAND;
     bool running = handle[0] != nullptr;
     if (!running
       && ((!reuse_subtree && !ponder) || (eval_policy_queue.empty() && eval_value_queue.empty()))) {
-      UNLOCK_EXPAND;
       break;
     }
 
     if (eval_policy_queue.empty() && eval_value_queue.empty()) {
-      UNLOCK_EXPAND;
       this_thread::sleep_for(chrono::milliseconds(1));
       //cerr << "EMPTY QUEUE" << endl;
       continue;
@@ -2502,6 +2499,7 @@ void EvalNode() {
     } else {
       std::vector<std::shared_ptr<policy_eval_req>> requests;
 
+      LOCK_EXPAND;
       for (int i = 0; i < policy_batch_size && !eval_policy_queue.empty(); i++) {
 	auto req = eval_policy_queue.front();
 	requests.push_back(req);
@@ -2522,14 +2520,13 @@ void EvalNode() {
         eval_input_data_komi.push_back(komi[0]);
       }
       EvalPolicy(requests, eval_input_data_basic, eval_input_data_features, eval_input_data_history, eval_input_data_color, eval_input_data_komi);
-      LOCK_EXPAND;
     }
 
     if (running && eval_value_queue.size() == 0) {
-      UNLOCK_EXPAND;
     } else {
       std::vector<std::shared_ptr<value_eval_req>> requests;
 
+      LOCK_EXPAND;
       for (int i = 0; i < value_batch_size && !eval_value_queue.empty(); i++) {
 	auto req = eval_value_queue.front();
 	requests.push_back(req);
