@@ -216,8 +216,8 @@ static std::queue<std::shared_ptr<nn_eval_req>> eval_nn_queue;
 static std::atomic<int> eval_count_value;
 static std::atomic<int> eval_count_eog;
 static double owner_nn[BOARD_MAX];
-static std::atomic<uint64_t> depth_count;
-static std::atomic<uint64_t> depth_sum;
+static std::atomic<double> depth_count;
+static std::atomic<double> depth_sum;
 
 
 //template<double>
