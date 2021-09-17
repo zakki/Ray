@@ -24,6 +24,12 @@ SetDebugMessageMode( const bool flag )
   debug_message = flag;
 }
 
+bool
+IsDebugMessageMode()
+{
+  return debug_message;
+}
+
 //////////////////
 //  盤面の表示  //
 //////////////////

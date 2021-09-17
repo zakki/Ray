@@ -36,6 +36,9 @@ char err_command[] = "? unknown command";
 char err_genmove[] = "gemmove color";
 char err_play[] = "play color point";
 char err_komi[] = "komi float";
+char err_reg_genmove[] = "reg_genmove color";
+char err_static_score[] = "static_score (tromp_taylor_score|japanese_score)";
+char err_sg_compare_float[] = "sg_compare_float value name";
 
 //  自分の石の色
 int player_color = 0;
@@ -93,6 +96,15 @@ static void GTP_fixed_handicap( void );
 //  loadsgfコマンドを処理
 static void GTP_loadsgf( void );
 
+// fuego拡張
+
+//  reg_genmoveコマンドを処理
+static void GTP_reg_genmove( void );
+//  static_scoreコマンドを処理
+static void GTP_static_score( void );
+//  sg_compare_floatコマンドを処理
+static void GTP_sg_compare_float( void );
+
 ////////////
 //  定数  //
 ////////////
@@ -121,6 +133,9 @@ const GTP_command_t gtpcmd[] = {
   { "time_left",           GTP_timeleft            },
   { "time_settings",       GTP_timesettings        },
   { "version",             GTP_version             },
+  { "reg_genmove",         GTP_reg_genmove         },
+  { "static_score",        GTP_static_score        },
+  { "sg_compare_float",    GTP_sg_compare_float    },
 };
 
 
@@ -228,7 +243,7 @@ GTP_boardsize( void )
 
   GTP_response(brank, true);
 }
-  
+
 
 /////////////////////////////
 //  void GTP_clearboard()  //
@@ -248,7 +263,7 @@ GTP_clearboard( void )
 
   GTP_response(brank, true);
 }
-  
+
 
 ///////////////////////
 //  void GTP_name()  //
@@ -285,7 +300,7 @@ GTP_genmove( void )
   StopPondering();
 
   command = STRTOK(input_copy, DELIM, &next_token);
-  
+
   CHOMP(command);
 
   command = STRTOK(NULL, DELIM, &next_token);
@@ -305,17 +320,27 @@ GTP_genmove( void )
   }
 
   player_color = color;
-  
+
   point = UctSearchGenmove(game, color);
   if (point != RESIGN) {
     PutStone(game, point, color);
   }
-  
+
   IntegerToString(point, pos);
-  
+
   GTP_response(pos, true);
 
   UctSearchPondering(game, FLIP_COLOR(color));
+}
+
+
+//////////////////////////////
+//  void GTP_reg_genmove()  //
+//////////////////////////////
+static void
+GTP_reg_genmove( void )
+{
+  GTP_genmove();
 }
 
 
@@ -347,7 +372,7 @@ GTP_play( void )
   }
 
   command = STRTOK(NULL, DELIM, &next_token);
-  
+
   CHOMP(command);
   if (command == NULL){
     GTP_response(err_play, false);
@@ -359,10 +384,10 @@ GTP_play( void )
   if (pos != RESIGN) {
     PutStone(game, pos, color);
   }
-  
+
   GTP_response(brank, true);
 }
- 
+
 
 /////////////////////////////
 // void GTP_knowncommand() //
@@ -371,9 +396,9 @@ static void
 GTP_knowncommand( void )
 {
   char *command;
-  
+
   command = STRTOK(NULL, DELIM, &next_token);
-  
+
   if (command == NULL){
     GTP_response("known_command command", false);
     return;
@@ -387,8 +412,8 @@ GTP_knowncommand( void )
   }
   GTP_response("false", false);
 }
- 
- 
+
+
 ///////////////////////////////
 //  void GTP_listcommands()  //
 ///////////////////////////////
@@ -410,8 +435,8 @@ GTP_listcommands( void )
 
   GTP_response(list, true);
 }
- 
- 
+
+
 //////////////////////
 // void GTP_quit()  //
 //////////////////////
@@ -421,8 +446,8 @@ GTP_quit( void )
   GTP_response(brank, true);
   exit(0);
 }
- 
- 
+
+
 ///////////////////////
 //  void GTP_komi()  //
 ///////////////////////
@@ -443,7 +468,7 @@ GTP_komi( void )
     GTP_response(err_komi, false);
   }
 }
- 
+
 
 //////////////////////////
 //  void GTP_getkomi()  //
@@ -452,7 +477,7 @@ static void
 GTP_getkomi( void )
 {
   char buf[256];
-  
+
 #if defined(_WIN32)
   sprintf_s(buf, 4, "%lf", komi[0]);
 #else
@@ -474,7 +499,7 @@ GTP_finalscore( void )
 
   double score = UctAnalyze(game, S_BLACK) - komi[0];
 
-#if defined(_WIN32)  
+#if defined(_WIN32)
   if (abs(score) < 0.1) {
     sprintf_s(buf, 10, "0");
   } else if (score > 0) {
@@ -494,7 +519,7 @@ GTP_finalscore( void )
 
   GTP_response(buf, true);
 }
- 
+
 
 ///////////////////////////////
 //  void GTP_timesettings()  //
@@ -517,7 +542,7 @@ GTP_timesettings( void )
 
   SetTimeSettings(main_time, byoyomi, stone);
   InitializeSearchSetting();
-  
+
   GTP_response(brank, true);
 }
 
@@ -532,13 +557,13 @@ GTP_timeleft( void )
 
   str1 = STRTOK(NULL, DELIM, &next_token);
   str2 = STRTOK(NULL, DELIM, &next_token);
-  
+
   if (str1[0] == 'B' || str1[0] == 'b'){
     remaining_time[S_BLACK] = atof(str2);
   } else if (str1[0] == 'W' || str1[0] == 'w'){
     remaining_time[S_WHITE] = atof(str2);
   }
-  
+
   fprintf(stderr, "%f\n", remaining_time[S_BLACK]);
   fprintf(stderr, "%f\n", remaining_time[S_WHITE]);
   GTP_response(brank, true);
@@ -553,8 +578,8 @@ GTP_version( void )
 {
   GTP_response(PROGRAM_VERSION, true);
 }
- 
- 
+
+
 ////////////////////////////
 //  void GTP_showboard()  //
 ////////////////////////////
@@ -589,9 +614,9 @@ GTP_fixed_handicap( void )
   };
 
   StopPondering();
-  
+
   command = STRTOK(NULL, DELIM, &next_token);
-  
+
 #if defined (_WIN32)
   sscanf_s(command, "%d", &num);
   sprintf_s(buf, 1024, " ");
@@ -625,7 +650,7 @@ GTP_fixed_handicap( void )
     strncat(buf, pos, 5);
 #endif
   }
-  
+
   SetKomi(0.5);
   SetHandicapNum(num);
   GTP_response(buf, true);
@@ -642,7 +667,7 @@ GTP_set_free_handicap( void )
   int pos, num = 0;
 
   StopPondering();
-  
+
   while (1){
     command = STRTOK(NULL, DELIM, &next_token);
 
@@ -652,9 +677,9 @@ GTP_set_free_handicap( void )
       GTP_response(brank, true);
       return;
     }
-    
+
     pos = StringToInteger(command);
-    
+
     if (pos > 0 && pos < board_max && IsLegal(game, pos, S_BLACK)) {
       PutStone(game, pos, S_BLACK);
       num++;
@@ -671,17 +696,17 @@ GTP_final_status_list( void )
 {
   char dead[2048] = { 0 };
   char pos[5];
-  int owner[BOARD_MAX]; 
+  int owner[BOARD_MAX];
   char *command;
 
   StopPondering();
-  
+
   OwnerCopy(owner);
-  
+
   command = STRTOK(NULL, DELIM, &next_token);
 
   CHOMP(command);
-  
+
   if (!strcmp(command, "dead")){
     for (int y = board_start; y <= board_end; y++) {
       for (int x = board_start; x <= board_end; x++) {
@@ -713,7 +738,7 @@ GTP_final_status_list( void )
       }
     }
   }
-  
+
   GTP_response(dead, true);
 }
 
@@ -731,9 +756,9 @@ GTP_kgs_genmove_cleanup( void )
   int point = PASS;
 
   StopPondering();
- 
+
   command = STRTOK(input_copy, DELIM, &next_token);
-  
+
   CHOMP(command);
   if (!strcmp("genmove_black", command)) {
     color = S_BLACK;
@@ -756,19 +781,19 @@ GTP_kgs_genmove_cleanup( void )
       return;
     }
   }
-  
+
   player_color = color;
-  
+
   point = UctSearchGenmoveCleanUp(game, color);
   if (point != RESIGN) {
     PutStone(game, point, color);
   }
-  
+
   IntegerToString(point, pos);
-  
+
   GTP_response(pos, true);
 }
- 
+
 
 //////////////////////////
 //  void GTP_loadsgf()  //
@@ -833,7 +858,7 @@ GTP_loadsgf( void )
     pos = GetHandicapStone(&sgf, i);
     PutStone(game, pos, sgf.handicap_color[i]);
   }
- 
+
   // 置き石の個数の設定
   if (sgf.handicaps != 0) {
     SetHandicapNum(sgf.handicaps);
@@ -859,4 +884,97 @@ GTP_loadsgf( void )
   } else {
     GTP_response("white", true);
   }
+}
+
+
+/////////////////////////////
+//  void GTP_static_score()  //
+/////////////////////////////
+static void
+GTP_static_score( void )
+{
+  char buf[10];
+  char *command;
+
+  command = STRTOK(input_copy, DELIM, &next_token);
+  command = STRTOK(NULL, DELIM, &next_token);
+  if (command == NULL){
+    GTP_response(err_static_score, true);
+    return;
+  }
+  CHOMP(command);
+
+  StopPondering();
+
+  bool japanese_score = false;
+  if (!strcmp(command, "tromp_taylor_score")){
+  } else if (!strcmp(command, "japanese_score")){
+    japanese_score = true;
+    GTP_response("unsupported scoring rule", false);
+    return;
+  }
+
+  double score = UctAnalyze(game, S_BLACK) - komi[0];
+
+#if defined(_WIN32)
+  if (abs(score) < 0.1) {
+    sprintf_s(buf, 10, "0");
+  } else if (score > 0) {
+    sprintf_s(buf, 10, "B+%.1lf", score);
+  } else {
+    sprintf_s(buf, 10, "W+%.1lf", abs(score));
+  }
+#else
+  if (abs(score) < 0.1) {
+    snprintf(buf, 10, "0");
+  } else if (score > 0) {
+    snprintf(buf, 10, "B+%.1lf", score);
+  } else {
+    snprintf(buf, 10, "W+%.1lf", abs(score));
+  }
+#endif
+
+  GTP_response(buf, true);
+}
+
+
+///////////////////////////////////
+//  void GTP_sg_compare_float()  //
+///////////////////////////////////
+static void
+GTP_sg_compare_float( void )
+{
+  char *command;
+
+  command = STRTOK(input_copy, DELIM, &next_token);
+  CHOMP(command);
+  command = STRTOK(NULL, DELIM, &next_token);
+  if (command == NULL){
+    GTP_response(err_sg_compare_float, false);
+    return;
+  }
+  CHOMP(command);
+  float value = atof(command);
+
+  command = STRTOK(NULL, DELIM, &next_token);
+  if (command == NULL){
+    GTP_response(err_sg_compare_float, false);
+    return;
+  }
+  CHOMP(command);
+
+  float v = 0;
+  if (!strcmp(command, "uct_value")){
+    extern uct_node_t *uct_node;
+    auto& node = uct_node[current_root];
+    if (node.move_count > 0)
+      v = static_cast<float>(node.win) / node.move_count;
+    if (IsDebugMessageMode())
+      std::cerr << node.win << "/" << node.move_count << " = " << v << std::endl;
+  } else {
+    GTP_response("unknown value", false);
+    return;
+  }
+
+  GTP_response(v < value ? "-1" : "1", true);
 }

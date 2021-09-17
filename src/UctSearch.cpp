@@ -327,9 +327,11 @@ InitializeUctSearch( void )
   // UCTのノードのメモリを確保
   uct_node = new uct_node_t[uct_hash_size];
 
-  cerr << "Require " << uct_hash_size * sizeof(uct_node_t) / 1024 / 1024 << " Mbytes for Uct Node" << endl << endl;
-  cerr << sizeof(uct_node_t) << endl;
-  cerr << sizeof(child_node_t) * UCT_CHILD_MAX << endl;
+  if (IsDebugMessageMode()) {
+    cerr << "Require " << uct_hash_size * sizeof(uct_node_t) / 1024 / 1024 << " Mbytes for Uct Node" << endl << endl;
+    cerr << sizeof(uct_node_t) << endl;
+    cerr << sizeof(child_node_t) * UCT_CHILD_MAX << endl;
+  }
   
   if (uct_node == NULL) {
     cerr << "Cannot allocate memory !!" << endl;

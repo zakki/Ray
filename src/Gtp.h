@@ -47,7 +47,9 @@ struct GTP_command_t {
 #define STRTOK(src, token, next) strtok((src), (token))
 #endif
 
-#define CHOMP(command) if(command[strlen(command)-1] == '\n') command[strlen(command)-1] = '\0'
+#define CHOMP(command) while (true) {\
+    if(command[strlen(command)-1] == '\n' || command[strlen(command)-1] == '\r') command[strlen(command)-1] = '\0'; else break; \
+  }
 
 // gtp本体
 void GTP_main( void );

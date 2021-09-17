@@ -7,6 +7,7 @@
 
 //  エラーメッセージの出力の設定
 void SetDebugMessageMode( const bool flag );
+bool IsDebugMessageMode();
 
 //  盤面の表示
 void PrintBoard( const game_info_t *game );
