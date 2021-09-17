@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <stack>
 
 #include "GoBoard.h"
 #include "Semeai.h"
@@ -1724,7 +1725,7 @@ CheckBentFourInTheCorner( game_info_t *game )
 //  地の計算  //
 ////////////////
 int
-CalculateScore( game_info_t *game )
+CalculateScore( const game_info_t *game )
 // game_info_t *game : 盤面の情報を示すポインタ
 {
   const char *board = game->board;
@@ -1741,4 +1742,77 @@ CalculateScore( game_info_t *game )
 
   //  黒−白を返す(コミなし)
   return(scores[S_BLACK] - scores[S_WHITE]);
+}
+
+
+int
+CalculateScoreNoFill( const game_info_t *game, bool japanese_score )
+// game_info_t *game : 盤面の情報を示すポインタ
+{
+  const char *board = game->board;
+  int scores[S_MAX] = { 0 };
+  bool visited[BOARD_MAX] = { false };
+  std::stack<int> rest;
+
+  // 地の数え上げ
+  for (int i = 0; i < pure_board_max; i++) {
+    const int pos = onboard_pos[i];
+    int color = board[pos];
+    if (!japanese_score) {
+      // 石をカウント
+      if (color == S_BLACK || color == S_WHITE)
+        scores[color]++;
+    }
+
+    // 空点がどちらの地か判定
+    if (color != S_EMPTY)
+      continue;
+    if (visited[pos])
+      continue;
+    rest.push(pos);
+    int area = 0;
+    bool adj_black = false;
+    bool adj_white = false;
+    while (!rest.empty()) {
+      int p = rest.top();
+      rest.pop();
+      if (visited[p])
+        continue;
+
+      area++;
+      visited[p] = true;
+
+      int neighbor4[4];
+      GetNeighbor4(neighbor4, p);
+
+      for (int neighbor : neighbor4) {
+        if (visited[neighbor])
+          continue;
+        int c = board[neighbor];
+        if (c == S_EMPTY) {
+          rest.push(neighbor);
+        } else if (c == S_BLACK) {
+          adj_black = true;
+        } else if (c == S_WHITE) {
+          adj_white = true;
+        }
+      }
+    }
+    //std::cerr << "score " << adj_black << "/" << adj_white << " " << area << std::endl;
+    if (adj_black && !adj_white) {
+      scores[S_BLACK] += area;
+    } else if (adj_white && !adj_black) {
+      scores[S_WHITE] += area;
+    }
+  }
+
+  if (japanese_score) {
+    //std::cerr << "prisoner " << game->prisoner[S_BLACK] << "/" << game->prisoner[S_WHITE] << std::endl;
+    scores[S_BLACK] += game->prisoner[S_BLACK];
+    scores[S_WHITE] += game->prisoner[S_WHITE];
+  }
+  //std::cerr << "total " << scores[S_BLACK] << "/" << scores[S_WHITE] << std::endl;
+
+  //  黒−白を返す(コミなし)
+  return scores[S_BLACK] - scores[S_WHITE];
 }

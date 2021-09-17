@@ -899,22 +899,26 @@ GTP_static_score( void )
   command = STRTOK(input_copy, DELIM, &next_token);
   command = STRTOK(NULL, DELIM, &next_token);
   if (command == NULL){
-    GTP_response(err_static_score, true);
+    GTP_response(err_static_score, false);
     return;
   }
   CHOMP(command);
 
   StopPondering();
 
-  bool japanese_score = false;
+  double score;
   if (!strcmp(command, "tromp_taylor_score")){
+    score = CalculateScoreNoFill(game, false);
+    //score = UctAnalyze(game, S_BLACK);
   } else if (!strcmp(command, "japanese_score")){
-    japanese_score = true;
-    GTP_response("unsupported scoring rule", false);
+    score = CalculateScoreNoFill(game, true);
+    //score = UctAnalyze(game, S_BLACK);
+  } else {
+    GTP_response(err_static_score, false);
     return;
   }
 
-  double score = UctAnalyze(game, S_BLACK) - komi[0];
+  score -= komi[0];
 
 #if defined(_WIN32)
   if (abs(score) < 0.1) {

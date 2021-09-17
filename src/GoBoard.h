@@ -249,7 +249,8 @@ void PutStone( game_info_t *game, const int pos, const int color );
 void PoPutStone( game_info_t *game, const int pos, const int color );
 
 // スコアの判定
-int CalculateScore( game_info_t *game );
+int CalculateScore( const game_info_t *game );
+int CalculateScoreNoFill( const game_info_t *game, bool japanese_score = false );
 
 // コミの値の設定
 void SetKomi( const double new_komi );
