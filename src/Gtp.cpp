@@ -31,14 +31,17 @@ char *next_token;
 int command_id;
 
 //  応答用の文字列
-char brank[] = "";
-char err_command[] = "? unknown command";
-char err_genmove[] = "gemmove color";
-char err_play[] = "play color point";
-char err_komi[] = "komi float";
-char err_reg_genmove[] = "reg_genmove color";
-char err_static_score[] = "static_score (tromp_taylor_score|japanese_score)";
-char err_sg_compare_float[] = "sg_compare_float value name";
+const char brank[] = "";
+const char err_command[] = "? unknown command";
+const char err_genmove[] = "gemmove color";
+const char err_play[] = "play color point";
+const char err_komi[] = "komi float";
+const char err_reg_genmove[] = "reg_genmove color";
+const char err_static_score[] = "static_score (tromp_taylor_score|japanese_score)";
+const char err_go_rules[] = "go_rules (japanese|cgos|kgs)";
+const char err_sg_compare_float[] = "sg_compare_float value name";
+const char err_go_param_rules[] = "go_param_rules name value";
+const char err_uct_param_player[] = "uct_param_player name value";
 
 //  自分の石の色
 int player_color = 0;
@@ -102,6 +105,12 @@ static void GTP_loadsgf( void );
 static void GTP_reg_genmove( void );
 //  static_scoreコマンドを処理
 static void GTP_static_score( void );
+//  go_rulesコマンドを処理
+static void GTP_go_rules( void );
+//  go_param_rulesコマンドを処理
+static void GTP_go_param_rules( void );
+//  uct_param_playerコマンドを処理
+static void GTP_uct_param_player( void );
 //  sg_compare_floatコマンドを処理
 static void GTP_sg_compare_float( void );
 
@@ -135,6 +144,9 @@ const GTP_command_t gtpcmd[] = {
   { "version",             GTP_version             },
   { "reg_genmove",         GTP_reg_genmove         },
   { "static_score",        GTP_static_score        },
+  { "go_rules",            GTP_go_rules            },
+  { "go_param_rules",      GTP_go_param_rules      },
+  { "uct_param_player",    GTP_uct_param_player    },
   { "sg_compare_float",    GTP_sg_compare_float    },
 };
 
@@ -340,7 +352,39 @@ GTP_genmove( void )
 static void
 GTP_reg_genmove( void )
 {
-  GTP_genmove();
+  char *command;
+  char c;
+  char pos[10];
+  int color;
+  int point = PASS;
+
+  StopPondering();
+
+  command = STRTOK(input_copy, DELIM, &next_token);
+
+  CHOMP(command);
+
+  command = STRTOK(NULL, DELIM, &next_token);
+  if (command == NULL){
+    GTP_response(err_genmove, true);
+    return;
+  }
+  CHOMP(command);
+  c = (char)tolower((int)command[0]);
+  if (c == 'w') {
+    color = S_WHITE;
+  } else if (c == 'b') {
+    color = S_BLACK;
+  } else {
+    GTP_response(err_genmove, true);
+    return;
+  }
+
+  point = UctSearchGenmove(game, color);
+
+  IntegerToString(point, pos);
+
+  GTP_response(pos, true);
 }
 
 
@@ -939,6 +983,82 @@ GTP_static_score( void )
 #endif
 
   GTP_response(buf, true);
+}
+
+
+///////////////////////////
+//  void GTP_go_rules()  //
+///////////////////////////
+static void
+GTP_go_rules( void )
+{
+  StopPondering();
+
+  char* rule = STRTOK(NULL, DELIM, &next_token);
+  CHOMP(rule);
+
+  if (!strcmp(rule, "japanese")){
+    SetSuperKo(false);
+    scoring = scoring_type::TERRITORY;
+    GTP_response(brank, true);
+  } else if (!strcmp(rule, "cgos")){
+    SetSuperKo(true);
+    scoring = scoring_type::AREA;
+    GTP_response(brank, true);
+  } else if (!strcmp(rule, "kgs")){
+    GTP_response(brank, false);
+  } else {
+    std::cerr << "Unknown rule " << rule << std::endl;
+    GTP_response(err_go_rules, false);
+  }
+}
+
+
+/////////////////////////////////
+//  void GTP_go_param_rules()  //
+/////////////////////////////////
+static void
+GTP_go_param_rules( void )
+{
+  StopPondering();
+
+  char* name = STRTOK(NULL, DELIM, &next_token);
+  char* value = STRTOK(NULL, DELIM, &next_token);
+  CHOMP(name);
+  CHOMP(value);
+
+  if (!strcmp(name, "japanese_scoring")){
+    if (!strcmp(value, "1")){
+      scoring = scoring_type::TERRITORY;
+    } else {
+      scoring = scoring_type::AREA;
+    }
+    GTP_response(brank, true);
+  } else {
+    GTP_response(err_go_param_rules, false);
+  }
+}
+
+
+///////////////////////////////////
+//  void GTP_uct_param_player()  //
+///////////////////////////////////
+static void
+GTP_uct_param_player( void )
+{
+  StopPondering();
+
+  char* name = STRTOK(NULL, DELIM, &next_token);
+  char* value = STRTOK(NULL, DELIM, &next_token);
+  CHOMP(name);
+  CHOMP(value);
+
+  if (!strcmp(name, "resign_threshold")){
+    resign_threshold = atof(value);
+    GTP_response(brank, true);
+  } else {
+    GTP_response(err_uct_param_player, false);
+  }
 }
 
 

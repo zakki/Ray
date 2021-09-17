@@ -29,10 +29,12 @@ double komi[S_WHITE + 1];          // コミの値
 double dynamic_komi[S_WHITE + 1];  // ダイナミックコミの値
 static double default_komi = KOMI;        // デフォルトのコミの値
 
+scoring_type scoring;
+
 int board_pos_id[BOARD_MAX];  // 盤上の位置の識別番号 
 
 int board_x[BOARD_MAX];  // x方向の座標  
-int board_y[BOARD_MAX];  // y方向の座標  
+int board_y[BOARD_MAX];  // y方向の座標
 
 unsigned char eye[PAT3_MAX];        // 目のパターン
 unsigned char false_eye[PAT3_MAX];

@@ -57,6 +57,7 @@ const double BONUS_WEIGHT = 0.35;
 const double PASS_THRESHOLD = 0.90;
 // 投了する勝率の閾値
 const double RESIGN_THRESHOLD = 0.20;
+extern double resign_threshold;
 
 // Virtual Loss (Best Parameter)
 const int VIRTUAL_LOSS = 1;

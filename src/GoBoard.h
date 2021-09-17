@@ -137,6 +137,11 @@ struct game_info_t {
   long long sum_rate[2];                  // シミュレーション時の全体のレートの合計値
 };
 
+enum class scoring_type {
+  AREA,
+  TERRITORY,
+};
+
 
 ////////////////
 //    変数    //
@@ -168,6 +173,9 @@ extern double komi[S_OB];
 
 // Dynamic Komi
 extern double dynamic_komi[S_OB];
+
+// 領域/地
+extern scoring_type scoring;
 
 // 盤上の位置のID
 extern int board_pos_id[BOARD_MAX];  

@@ -95,6 +95,9 @@ static int criticality_index[BOARD_MAX];
 // 候補手のフラグ
 static bool candidates[BOARD_MAX];  
 
+// 投了する勝率の閾値
+double resign_threshold = RESIGN_THRESHOLD;
+
 static bool pondering_mode = false;
 
 static bool ponder = false;
@@ -550,7 +553,7 @@ UctSearchGenmove( game_info_t *game, int color )
              game->record[game->moves - 1].pos == PASS &&
              game->record[game->moves - 3].pos == PASS) {
     pos = PASS;
-  } else if (best_wp <= RESIGN_THRESHOLD) {
+  } else if (best_wp <= resign_threshold) {
     pos = RESIGN;
   } else {
     pos = uct_child[select_index].pos;
@@ -1676,8 +1679,8 @@ UctSearchGenmoveCleanUp( game_info_t *game, int color )
   } else {
     pos = uct_child[select_index].pos;
   }
-  
-  if ((double)uct_child[select_index].win / uct_child[select_index].move_count < RESIGN_THRESHOLD) {
+
+  if ((double)uct_child[select_index].win / uct_child[select_index].move_count < resign_threshold) {
     return PASS;
   } else {
     return pos;
