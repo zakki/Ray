@@ -200,8 +200,9 @@ PrintStringNext( const game_info_t *game )
 //  Ownerの表示  //
 ///////////////////
 void
-PrintOwner( const uct_node_t *root, const statistic_t *statistic, const int color, double *own )
+PrintOwner( const uct_node_t *root, const int color, double *own )
 {
+  const statistic_t *statistic = root->statistic;
   int player = 0, opponent = 0;
   double owner, score;
 

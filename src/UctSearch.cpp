@@ -190,6 +190,9 @@ static void Statistic( game_info_t *game, int winner );
 // UCT探索(1回の呼び出しにつき, 1回の探索)
 static int UctSearch( game_info_t *game, int color, std::mt19937_64 *mt, int current, int *winner );
 
+// 各ノードの統計情報の更新
+static void UpdateNodeStatistic( game_info_t *game, int winner, statistic_t *node_statistic );
+
 // 結果の更新
 static void UpdateResult( child_node_t *child, int result, int current );
 
@@ -536,7 +539,7 @@ UctSearchGenmove( game_info_t *game, int color )
   best_wp = (double)uct_child[select_index].win / uct_child[select_index].move_count;
 
   // 各地点の領地になる確率の出力
-  PrintOwner(&uct_node[current_root], statistic, color, owner);
+  PrintOwner(&uct_node[current_root], color, owner);
 
   // パスをするときは
   // 1. 直前の着手がパスで, パスした時の勝率がPASS_THRESHOLD以上
@@ -722,6 +725,9 @@ ExpandRoot( game_info_t *game, int color )
     uct_node[index].win = 0;
     uct_node[index].width = 0;
     uct_node[index].child_num = 0;
+    for (int i = 0; i < board_max; i++) {
+      uct_node[index].statistic[i].clear();
+    }
     fill_n(uct_node[index].seki, BOARD_MAX, false);
     
     uct_child = uct_node[index].child;
@@ -803,6 +809,9 @@ ExpandNode( game_info_t *game, int color, int current )
   uct_node[index].win = 0;
   uct_node[index].width = 0;
   uct_node[index].child_num = 0;
+  for (int i = 0; i < board_max; i++) {
+    uct_node[index].statistic[i].clear();
+  }
   fill_n(uct_node[index].seki, BOARD_MAX, false);
   uct_child = uct_node[index].child;
 
@@ -1210,6 +1219,9 @@ UctSearch( game_info_t *game, int color, mt19937_64 *mt, int current, int *winne
   // 探索結果の反映
   UpdateResult(&uct_child[next_index], result, current);
 
+  // 統計情報の更新
+  UpdateNodeStatistic(game, *winner, uct_node[current].statistic);
+
   return 1 - result;
 }
 
@@ -1273,8 +1285,8 @@ SelectMaxUcbChild( int current, int color )
   // 128回ごとにOwnerとCriticalityでソートし直す  
   if ((sum & 0x7f) == 0 && sum != 0) {
     int o_index[UCT_CHILD_MAX], c_index[UCT_CHILD_MAX];
-    CalculateCriticalityIndex(&uct_node[current], statistic, color, c_index);
-    CalculateOwnerIndex(&uct_node[current], statistic, color, o_index);
+    CalculateCriticalityIndex(&uct_node[current], uct_node[current].statistic, color, c_index);
+    CalculateOwnerIndex(&uct_node[current], uct_node[current].statistic, color, o_index);
     for (int i = 0; i < child_num; i++) {
       pos = uct_child[i].pos;
       if (pos == PASS) {
@@ -1366,6 +1378,28 @@ Statistic( game_info_t *game, int winner )
     std::atomic_fetch_add(&statistic[pos].colors[color], 1);
     if (color == winner) {
       std::atomic_fetch_add(&statistic[pos].colors[0], 1);
+    }
+  }
+}
+
+
+///////////////////////////////
+//  各ノードの統計情報の更新  //
+///////////////////////////////
+static void
+UpdateNodeStatistic( game_info_t *game, int winner, statistic_t *node_statistic )
+{
+  const char *board = game->board;
+
+  for (int i = 0; i < pure_board_max; i++) {
+    const int pos = onboard_pos[i];
+    int color = board[pos];
+
+    if (color == S_EMPTY) color = territory[Pat3(game->pat, pos)];
+
+    std::atomic_fetch_add(&node_statistic[pos].colors[color], 1);
+    if (color == winner) {
+      std::atomic_fetch_add(&node_statistic[pos].colors[0], 1);
     }
   }
 }
@@ -1548,7 +1582,7 @@ UctAnalyze( game_info_t *game, int color )
     }
   }
 
-  PrintOwner(&uct_node[current_root], statistic, color, owner);
+  PrintOwner(&uct_node[current_root], color, owner);
 
   return black - white;
 }
@@ -1562,7 +1596,7 @@ OwnerCopy( int *dest )
 {
   for (int i = 0; i < pure_board_max; i++) {
     const int pos = onboard_pos[i];
-    dest[pos] = (int)((double)statistic[pos].colors[my_color] / uct_node[current_root].move_count * 100);
+    dest[pos] = (int)((double)uct_node[current_root].statistic[pos].colors[my_color] / uct_node[current_root].move_count * 100);
   }
 }
 
@@ -1655,7 +1689,7 @@ UctSearchGenmoveCleanUp( game_info_t *game, int color )
   wp = (double)uct_node[current_root].win / uct_node[current_root].move_count;
 
   PrintPlayoutInformation(&uct_node[current_root], &po_info, finish_time, 0);
-  PrintOwner(&uct_node[current_root], statistic, color, owner);
+  PrintOwner(&uct_node[current_root], color, owner);
 
   PrintBestSequence(game, uct_node, current_root, color);
 

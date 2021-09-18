@@ -28,7 +28,7 @@ void PrintStringNext( const game_info_t *game );
 void PrintLegal( const game_info_t *game, const int color );
 
 //  オーナーの表示
-void PrintOwner( const uct_node_t *root, const statistic_t *statistic, const int color, double *own );
+void PrintOwner( const uct_node_t *root, const int color, double *own );
 
 //  最善応手列の表示
 void PrintBestSequence( const game_info_t *game, const uct_node_t *uct_node, const int root, const int start_color );

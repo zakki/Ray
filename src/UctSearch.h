@@ -119,6 +119,7 @@ struct uct_node_t {
   int width;                          // 探索幅
   int child_num;                      // 子ノードの数
   child_node_t child[UCT_CHILD_MAX];  // 子ノードの情報
+  statistic_t statistic[BOARD_MAX];   // 統計情報
   bool seki[BOARD_MAX];
 };
 
