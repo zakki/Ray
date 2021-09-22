@@ -1,9 +1,11 @@
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #include "Message.h"
 #include "Point.h"
@@ -346,6 +348,112 @@ PrintBestSequence( const game_info_t *game, const uct_node_t *uct_node, const in
 }
 
 
+static void
+PrintBestSequence(std::ostream& out, const game_info_t *game, const uct_node_t *uct_node, int current_root)
+{
+  int current = current_root;
+
+  auto root = &uct_node[current_root];
+  auto uct_child = uct_node[current].child;
+  int child_num = uct_node[current].child_num;
+
+  if (root->move_count == 0)
+    return;
+
+  int index = -1;
+  double max = 0;
+  for (int i = 0; i < child_num; i++) {
+    double m = uct_child[i].move_count;
+    if (m > max) {
+      max = m;
+      index = i;
+    }
+  }
+  if (index == -1)
+    return;
+  if (node_hash[current].color == S_BLACK) {
+    out << "B ";
+  } else if (node_hash[current].color == S_WHITE) {
+    out << "W ";
+  }
+  out << FormatMove(uct_child[index].pos) << " ";
+
+  current = uct_child[index].index;
+
+  while (current != NOT_EXPANDED) {
+    uct_child = uct_node[current].child;
+    child_num = uct_node[current].child_num;
+
+    max = 0;
+    index = -1;
+
+    for (int i = 0; i < child_num; i++) {
+      double m = uct_child[i].move_count;
+      if (m > max) {
+        max = m;
+        index = i;
+      }
+    }
+
+    if (index == -1) break;
+
+    if (node_hash[current].color == S_BLACK) {
+      out << "B ";
+    } else if (node_hash[current].color == S_WHITE) {
+      out << "W ";
+    }
+    out << FormatMove(uct_child[index].pos) << " ";
+
+    current = uct_child[index].index;
+  }
+}
+
+
+void
+PrintMoveStat( std::ostream& out, const game_info_t *game, const uct_node_t *uct_node, int current_root )
+{
+  const child_node_t *uct_child = uct_node[current_root].child;
+  const int child_num = uct_node[current_root].child_num;
+
+  vector<size_t> idx(child_num);
+  iota(idx.begin(), idx.end(), 0);
+
+  auto idxComp = [=](size_t i1, size_t i2) {
+    return uct_child[i1].move_count > uct_child[i2].move_count;
+  };
+
+  sort(idx.begin(), idx.end(), idxComp);
+
+  out << "|Move|#PO  |Simulation|Win       |Best Sequence" << endl;
+  // UCB値最大の手を求める
+  //for (int j = 0; j < std::min(10, child_num); j++) {
+  for (int j = 0; j < child_num; j++) {
+    size_t i = idx[j];
+    if (uct_child[i].move_count == 0)
+      continue;
+    //if (!uct_child[i].flag && !uct_child[i].open)
+    //continue;
+    //double p2 = -1;
+
+    double win = uct_child[i].win;
+    double move_count = uct_child[i].move_count;
+    double p0 = win / move_count;
+
+    out << "|" << setw(4) << FormatMove(uct_child[i].pos);
+    out << "|" << setw(5) << (int) move_count;
+
+    auto precision = out.precision();
+    out.precision(4);
+    out << "|" << setw(10) << fixed << (p0 * 100);
+    out.precision(precision);
+    out << "|";
+    if (uct_child[i].index > 0)
+      PrintBestSequence(out, game, uct_node, uct_child[i].index);
+    out << endl;
+  }
+}
+
+
 ///////////////////////
 //  探索の情報の表示  //
 ///////////////////////
@@ -382,6 +490,21 @@ PrintPoint( const int pos )
   } else {
     cerr << GOGUI_X(pos) << GOGUI_Y(pos) << endl;
   }
+}
+
+
+std::string FormatMove(int pos)
+{
+  if (pos == PASS) {
+    return "PASS";
+  } else if (pos == RESIGN) {
+    return "RESIGN";
+  } else {
+    ostringstream o;
+    o << GOGUI_X(pos) << GOGUI_Y(pos);
+    return o.str();
+  }
+
 }
 
 
