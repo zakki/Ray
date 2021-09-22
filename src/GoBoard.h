@@ -269,4 +269,7 @@ void GetNeighbor4( int neighbor4[4], const int pos );
 // 隅のマガリ四目の確認
 void CheckBentFourInTheCorner( game_info_t *game );
 
+//
+bool IsAfterEndGame( const game_info_t* game, int next_pos = RESIGN );
+
 #endif

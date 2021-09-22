@@ -440,6 +440,9 @@ PrintMoveStat( std::ostream& out, const game_info_t *game, const uct_node_t *uct
     double p0 = win / move_count;
 
     out << "|" << setw(4) << FormatMove(uct_child[i].pos);
+    if (IsAfterEndGame(game)) {
+      out << "(cleanup) ";
+    }
     out << "|" << setw(5) << (int) move_count;
 
     auto precision = out.precision();
@@ -447,6 +450,9 @@ PrintMoveStat( std::ostream& out, const game_info_t *game, const uct_node_t *uct
     out << "|" << setw(10) << fixed << (p0 * 100);
     out.precision(precision);
     out << "|";
+    if (scoring == scoring_type::TERRITORY && IsAfterEndGame(game, uct_child[i].pos)) {
+      out << "(cleanup) ";
+    }
     if (uct_child[i].index > 0)
       PrintBestSequence(out, game, uct_node, uct_child[i].index);
     out << endl;

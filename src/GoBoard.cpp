@@ -1818,3 +1818,29 @@ CalculateScoreNoFill( const game_info_t *game, bool japanese_score )
   //  黒−白を返す(コミなし)
   return scores[S_BLACK] - scores[S_WHITE];
 }
+
+
+bool
+IsAfterEndGame( const game_info_t* game, int next_pos )
+{
+  int pass_count = 0;
+  bool end_game_phase = false;
+  bool cleanup_phase = false;
+
+  for (int i = 1; i <= game->moves; i++) {
+    int pos = i < game->moves ? game->record[i].pos : next_pos;
+    if (pos == PASS) {
+      pass_count++;
+    } else {
+      pass_count = 0;
+    }
+    if (pass_count == 2) {
+      if (end_game_phase)
+        cleanup_phase = true;
+      else
+        end_game_phase = true;
+      pass_count = 0;
+    }
+  }
+  return end_game_phase;
+}
