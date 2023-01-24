@@ -4,6 +4,8 @@
 #include <cstring>
 #include <cctype>
 #include <iostream>
+#include <sstream>
+#include <algorithm>
 
 #include "board/DynamicKomi.hpp"
 #include "board/GoBoard.hpp"
@@ -90,6 +92,8 @@ static void GTP_set_free_handicap( void );
 static void GTP_fixed_handicap( void );
 //  loadsgfコマンドを処理
 static void GTP_loadsgf( void );
+//  cgos-genmove_analyzeコマンドを処理
+static void GTP_cgos_genmove_analyze( void );
 
 ////////////
 //  定数  //
@@ -103,6 +107,7 @@ const GTP_command_t gtpcmd[] = {
   { "final_status_list",   GTP_final_status_list   },
   { "fixed_handicap",      GTP_fixed_handicap      },
   { "genmove",             GTP_genmove             },
+  { "cgos-genmove_analyze",GTP_cgos_genmove_analyze},
   { "get_komi",            GTP_getkomi             },
   { "kgs-genmove_cleanup", GTP_kgs_genmove_cleanup },
   { "known_command",       GTP_knowncommand        },
@@ -227,7 +232,7 @@ GTP_boardsize( void )
 
   GTP_response(brank, true);
 }
-  
+
 
 /////////////////////////////
 //  void GTP_clearboard()  //
@@ -247,7 +252,7 @@ GTP_clearboard( void )
 
   GTP_response(brank, true);
 }
-  
+
 
 ///////////////////////
 //  void GTP_name()  //
@@ -284,7 +289,7 @@ GTP_genmove( void )
   StopPondering();
 
   command = STRTOK(input_copy, DELIM, &next_token);
-  
+
   CHOMP(command);
 
   command = STRTOK(NULL, DELIM, &next_token);
@@ -304,15 +309,167 @@ GTP_genmove( void )
   }
 
   player_color = color;
-  
+
   point = UctSearchGenmove(game, color);
   if (point != RESIGN) {
     PutStone(game, point, color);
   }
-  
+
   IntegerToString(point, pos);
-  
+
   GTP_response(pos, true);
+
+  UctSearchPondering(game, GetOppositeColor(color));
+}
+
+
+std::string FormatMove(int pos)
+{
+  if (pos == PASS) {
+    return "PASS";
+  } else if (pos == RESIGN) {
+    return "RESIGN";
+  } else {
+    std::ostringstream o;
+    o << GOGUI_X(pos) << GOGUI_Y(pos);
+    return o.str();
+  }
+}
+
+
+static void
+PrintCgosMoves(std::ostringstream& out, const uct_node_t *uct_node, const int root, const int color)
+{
+  const child_node_t *uct_child = uct_node[current_root].child;
+  const int child_num = uct_node[current_root].child_num;
+
+  std::vector<size_t> idx(child_num);
+  std::iota(idx.begin(), idx.end(), 0);
+
+  auto idxComp = [=](size_t i1, size_t i2) {
+    return uct_child[i1].move_count > uct_child[i2].move_count;
+  };
+
+  std::sort(idx.begin(), idx.end(), idxComp);
+
+  double owner[BOARD_MAX];
+  double score = GetCurrentScore(color, owner);
+  out << "\"moves\":[";
+  for (int j = 0; j < child_num; j++) {
+    auto i = idx[j];
+
+    double win = uct_child[i].win;
+    double move_count = uct_child[i].move_count;
+    double p0 = win / move_count;
+    if (move_count == 0)
+      continue;
+
+    if (j != 0) out << ",";
+    out << "{\"move\":\"" << FormatMove(uct_child[i].pos)
+      << "\",\"winrate\":" << p0
+      << ",\"score\":" << score;
+
+    if (uct_child[i].index > 0) {
+      int current = uct_child[i].index;
+      bool first = true;
+      while (current != NOT_EXPANDED) {
+        auto uct_child = uct_node[current].child;
+        auto child_num = uct_node[current].child_num;
+
+        int max = 50;
+        int index = -1;
+
+        for (int i = 0; i < child_num; i++) {
+          if (uct_child[i].move_count > max) {
+            max = uct_child[i].move_count;
+            index = i;
+          }
+        }
+
+        if (index == -1) break;
+        if (first)
+          out << ",\"pv\":\"";
+        else
+          out << " ";
+        first = false;
+        if (uct_child[index].pos == PASS) out << "PASS";
+        else out << GOGUI_X(uct_child[index].pos) << GOGUI_Y(uct_child[index].pos);
+
+        current = uct_child[index].index;
+      }
+      if (!first)
+      out << "\"";
+    }
+    //  PrintBestSequence(out, game, uct_node, uct_child[i].index);
+    out << "}";
+  }
+  out << "],";
+  out << "\"ownership\":\"";
+
+
+  const auto CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  for (int i = 1, y = board_start; y <= board_end; y++, i++) {
+    for (int x = board_start; x <= board_end; x++) {
+      const int pos = x + y * board_size;
+      out << CHARS[(int)std::round(owner[pos] / 100 * 62)];
+    }
+    // out << "\n";
+  }
+  out << "\"";
+}
+
+
+///////////////////////////////////////
+//  void GTP_cgos_genmove_analyze()  //
+///////////////////////////////////////
+static void
+GTP_cgos_genmove_analyze( void )
+{
+  char *command;
+  char c;
+  char pos[10];
+  int color;
+  int point = PASS;
+
+  StopPondering();
+
+  command = STRTOK(input_copy, DELIM, &next_token);
+
+  CHOMP(command);
+
+  command = STRTOK(NULL, DELIM, &next_token);
+  if (command == NULL){
+    GTP_response(err_genmove, true);
+    return;
+  }
+  CHOMP(command);
+  c = (char)tolower((int)command[0]);
+  if (c == 'w') {
+    color = S_WHITE;
+  } else if (c == 'b') {
+    color = S_BLACK;
+  } else {
+    GTP_response(err_genmove, true);
+    return;
+  }
+
+  player_color = color;
+
+  point = UctSearchGenmove(game, color);
+  if (point != RESIGN) {
+    PutStone(game, point, color);
+  }
+
+  IntegerToString(point, pos);
+
+  std::ostringstream out;
+  out << "\n";
+  out << "{";
+  PrintCgosMoves(out, uct_node, current_root, color);
+  out << "}\n";
+  out << "play " << pos;
+
+  GTP_response(out.str().c_str(), true);
 
   UctSearchPondering(game, GetOppositeColor(color));
 }
@@ -346,7 +503,7 @@ GTP_play( void )
   }
 
   command = STRTOK(NULL, DELIM, &next_token);
-  
+
   CHOMP(command);
   if (command == NULL){
     GTP_response(err_play, false);
@@ -358,10 +515,10 @@ GTP_play( void )
   if (pos != RESIGN) {
     PutStone(game, pos, color);
   }
-  
+
   GTP_response(brank, true);
 }
- 
+
 
 /////////////////////////////
 // void GTP_knowncommand() //
@@ -370,9 +527,9 @@ static void
 GTP_knowncommand( void )
 {
   char *command;
-  
+
   command = STRTOK(NULL, DELIM, &next_token);
-  
+
   if (command == NULL){
     GTP_response("known_command command", false);
     return;
@@ -386,8 +543,8 @@ GTP_knowncommand( void )
   }
   GTP_response("false", false);
 }
- 
- 
+
+
 ///////////////////////////////
 //  void GTP_listcommands()  //
 ///////////////////////////////
@@ -405,12 +562,12 @@ GTP_listcommands( void )
     }
     list[i++] = '\n';
   }
-  list[i++] = '\0';
+  list[i-1] = '\0';
 
   GTP_response(list, true);
 }
- 
- 
+
+
 //////////////////////
 // void GTP_quit()  //
 //////////////////////
@@ -420,8 +577,8 @@ GTP_quit( void )
   GTP_response(brank, true);
   exit(0);
 }
- 
- 
+
+
 ///////////////////////
 //  void GTP_komi()  //
 ///////////////////////
@@ -442,7 +599,7 @@ GTP_komi( void )
     GTP_response(err_komi, false);
   }
 }
- 
+
 
 //////////////////////////
 //  void GTP_getkomi()  //
@@ -451,7 +608,7 @@ static void
 GTP_getkomi( void )
 {
   char buf[256];
-  
+
 #if defined(_WIN32)
   sprintf_s(buf, 4, "%lf", komi[0]);
 #else
@@ -473,7 +630,7 @@ GTP_finalscore( void )
 
   double score = UctAnalyze(game, S_BLACK) - komi[0];
 
-#if defined(_WIN32)  
+#if defined(_WIN32)
   if (abs(score) < 0.1) {
     sprintf_s(buf, 10, "0");
   } else if (score > 0) {
@@ -493,7 +650,7 @@ GTP_finalscore( void )
 
   GTP_response(buf, true);
 }
- 
+
 
 ///////////////////////////////
 //  void GTP_timesettings()  //
@@ -516,7 +673,7 @@ GTP_timesettings( void )
 
   SetTimeSettings(main_time, byoyomi, stone);
   InitializeSearchSetting();
-  
+
   GTP_response(brank, true);
 }
 
@@ -531,13 +688,13 @@ GTP_timeleft( void )
 
   str1 = STRTOK(NULL, DELIM, &next_token);
   str2 = STRTOK(NULL, DELIM, &next_token);
-  
+
   if (str1[0] == 'B' || str1[0] == 'b'){
     SetCurrentRemainingTime(S_BLACK, atof(str2));
   } else if (str1[0] == 'W' || str1[0] == 'w'){
     SetCurrentRemainingTime(S_WHITE, atof(str2));
   }
-  
+
   fprintf(stderr, "%f\n", GetRemainingTime(S_BLACK));
   fprintf(stderr, "%f\n", GetRemainingTime(S_WHITE));
   GTP_response(brank, true);
@@ -552,8 +709,8 @@ GTP_version( void )
 {
   GTP_response(PROGRAM_VERSION, true);
 }
- 
- 
+
+
 ////////////////////////////
 //  void GTP_showboard()  //
 ////////////////////////////
@@ -588,9 +745,9 @@ GTP_fixed_handicap( void )
   };
 
   StopPondering();
-  
+
   command = STRTOK(NULL, DELIM, &next_token);
-  
+
 #if defined (_WIN32)
   sscanf_s(command, "%d", &num);
   sprintf_s(buf, 1024, " ");
@@ -624,7 +781,7 @@ GTP_fixed_handicap( void )
     strncat(buf, pos, 5);
 #endif
   }
-  
+
   SetKomi(0.5);
   SetHandicapNum(num);
   GTP_response(buf, true);
@@ -641,7 +798,7 @@ GTP_set_free_handicap( void )
   int pos, num = 0;
 
   StopPondering();
-  
+
   while (1){
     command = STRTOK(NULL, DELIM, &next_token);
 
@@ -651,9 +808,9 @@ GTP_set_free_handicap( void )
       GTP_response(brank, true);
       return;
     }
-    
+
     pos = StringToInteger(command);
-    
+
     if (pos > 0 && pos < board_max && IsLegal(game, pos, S_BLACK)) {
       PutStone(game, pos, S_BLACK);
       num++;
@@ -670,17 +827,17 @@ GTP_final_status_list( void )
 {
   char dead[2048] = { 0 };
   char pos[5];
-  int owner[BOARD_MAX]; 
+  int owner[BOARD_MAX];
   char *command;
 
   StopPondering();
-  
+
   OwnerCopy(owner);
-  
+
   command = STRTOK(NULL, DELIM, &next_token);
 
   CHOMP(command);
-  
+
   if (!strcmp(command, "dead")){
     for (int y = board_start; y <= board_end; y++) {
       for (int x = board_start; x <= board_end; x++) {
@@ -712,7 +869,7 @@ GTP_final_status_list( void )
       }
     }
   }
-  
+
   GTP_response(dead, true);
 }
 
@@ -730,9 +887,9 @@ GTP_kgs_genmove_cleanup( void )
   int point = PASS;
 
   StopPondering();
- 
+
   command = STRTOK(input_copy, DELIM, &next_token);
-  
+
   CHOMP(command);
   if (!strcmp("genmove_black", command)) {
     color = S_BLACK;
@@ -755,19 +912,19 @@ GTP_kgs_genmove_cleanup( void )
       return;
     }
   }
-  
+
   player_color = color;
-  
+
   point = UctSearchGenmoveCleanUp(game, color);
   if (point != RESIGN) {
     PutStone(game, point, color);
   }
-  
+
   IntegerToString(point, pos);
-  
+
   GTP_response(pos, true);
 }
- 
+
 
 //////////////////////////
 //  void GTP_loadsgf()  //
@@ -832,7 +989,7 @@ GTP_loadsgf( void )
     pos = GetHandicapStone(&sgf, i);
     PutStone(game, pos, sgf.handicap_color[i]);
   }
- 
+
   // 置き石の個数の設定
   if (sgf.handicaps != 0) {
     SetHandicapNum(sgf.handicaps);

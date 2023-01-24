@@ -1292,3 +1292,38 @@ CorrectDescendentNodes( std::vector<int> &indexes, int index )
     }
   }   
 }
+
+
+
+
+///////////////////
+//  スコアの取得  //
+///////////////////
+double
+GetCurrentScore( int color, double *own )
+{
+  const auto root = &uct_node[current_root];
+  int player = 0, opponent = 0;
+
+  for (int i = 1, y = board_start; y <= board_end; y++, i++) {
+    for (int x = board_start; x <= board_end; x++) {
+      const int pos = POS(x, y);
+      double owner = (double)statistic[pos].colors[color] / root->move_count;
+      if (owner > 0.5) {
+        player++;
+      } else {
+        opponent++;
+      }
+      own[pos] = owner * 100.0;
+    }
+  }
+
+  double score;
+  if (color == S_BLACK) {
+    score = player - opponent - komi[0];
+  } else {
+    score = player - opponent + komi[0];
+  }
+
+  return score;
+}

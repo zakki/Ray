@@ -114,5 +114,7 @@ int UctSearchGenmoveCleanUp( game_info_t *game, int color );
 // 探索の再利用の設定
 void SetReuseSubtree( bool flag );
 
+// スコア予想
+double GetCurrentScore( int color, double *own );
 
 #endif
