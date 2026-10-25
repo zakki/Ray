@@ -13,6 +13,9 @@
 #include <cctype>
 #include <iostream>
 #include <thread>
+#if !defined (_WIN32)
+#include <sys/select.h>
+#endif
 
 #include "board/DynamicKomi.hpp"
 #include "board/GoBoard.hpp"
