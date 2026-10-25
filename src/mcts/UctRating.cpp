@@ -20,6 +20,9 @@
 #include "feature/Semeai.hpp"
 #include "pattern/PatternHash.hpp"
 #include "mcts/UctRating.hpp"
+#ifdef RAY_WEB
+#include "mcts/UctParameterFile.hpp"
+#endif
 #include "util/Utility.hpp"
 
 /**
@@ -504,6 +507,36 @@ AnalyzeUctRating( game_info_t *game, int color, double rate[] )
 void
 InputUCTParameter(void)
 {
+#ifdef RAY_WEB
+  const std::string packed_path = GetWorkingDirectory() + PATH_SEPARATOR + "uct_params.bin";
+  const UctParameterTarget targets[] = {
+    {"KoExist.txt", &uct_ko_exist, 1, nullptr, nullptr},
+    {"Pass.txt", uct_pass, UCT_PASS_MAX, nullptr, nullptr},
+    {"CaptureFeature.txt", uct_capture, UCT_CAPTURE_MAX, nullptr, nullptr},
+    {"SaveExtensionFeature.txt", uct_save_extension, UCT_SAVE_EXTENSION_MAX, nullptr, nullptr},
+    {"AtariFeature.txt", uct_atari, UCT_ATARI_MAX, nullptr, nullptr},
+    {"ExtensionFeature.txt", uct_extension, UCT_EXTENSION_MAX, nullptr, nullptr},
+    {"DameFeature.txt", uct_dame, UCT_DAME_MAX, nullptr, nullptr},
+    {"ConnectionFeature.txt", uct_connect, UCT_CONNECT_MAX, nullptr, nullptr},
+    {"ThrowInFeature.txt", uct_throw_in, UCT_THROW_IN_MAX, nullptr, nullptr},
+    {"PosID.txt", uct_pos_id, POS_ID_MAX, nullptr, nullptr},
+    {"MoveDistance1.txt", uct_move_distance_1, MOVE_DISTANCE_MAX * 4, nullptr, nullptr},
+    {"MoveDistance2.txt", uct_move_distance_2, MOVE_DISTANCE_MAX * 4, nullptr, nullptr},
+    {"MoveDistance3.txt", uct_move_distance_3, MOVE_DISTANCE_MAX * 4, nullptr, nullptr},
+    {"MoveDistance4.txt", uct_move_distance_4, MOVE_DISTANCE_MAX * 4, nullptr, nullptr},
+    {"Pat3.txt", uct_pat3, PAT3_MAX, nullptr, nullptr},
+    {"MD2.txt", uct_md2, LARGE_PAT_MAX, md2_index, nullptr},
+    {"MD3.txt", uct_md3, LARGE_PAT_MAX, nullptr, md3_index},
+    {"MD4.txt", uct_md4, LARGE_PAT_MAX, nullptr, md4_index},
+    {"MD5.txt", uct_md5, LARGE_PAT_MAX, nullptr, md5_index},
+  };
+  try {
+    LoadUctParameterFile(packed_path.c_str(), targets, sizeof(targets) / sizeof(targets[0]));
+  } catch (const std::exception &error) {
+    std::cerr << packed_path << ": " << error.what() << std::endl;
+    exit(1);
+  }
+#else
   std::string uct_parameters_path = GetWorkingDirectory() + PATH_SEPARATOR + "uct_params" + PATH_SEPARATOR;
   std::string path;
 
@@ -571,6 +604,8 @@ InputUCTParameter(void)
   //  マンハッタン距離5のパターン
   path = uct_parameters_path + "MD5.txt";
   InputLargePattern(path.c_str(), uct_md5, md5_index);
+
+#endif
 
   //  Owner
   for (int i = 0; i < OWNER_MAX; i++) {
