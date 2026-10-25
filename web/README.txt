@@ -79,3 +79,8 @@ Verification
 The tests need g++ and verify Python-to-C++ decoding for all three encodings,
 log quantization error bounds, exact integer mappings, malformed data rejection,
 and preservation of an existing output when conversion fails.
+
+Final-score regression tests (settled black/white areas and fresh analysis timer):
+
+    node web/final-score-test.cjs build/web
+    node web/final-score-test.cjs build/web --time

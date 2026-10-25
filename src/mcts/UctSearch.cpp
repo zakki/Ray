@@ -1498,6 +1498,7 @@ UctAnalyze( game_info_t *game, int color )
   current_root = ExpandRoot(game, color);
 
   SetPoHalt(10000);
+  StartTimer();
 
   for (int i = 0; i < threads; i++) {
     t_arg[i].thread_id = i;
@@ -1520,7 +1521,7 @@ UctAnalyze( game_info_t *game, int color )
 
   int black = 0, white = 0;
 
-  const int inv_count = 1.0 / statistic_count.load();
+  const double inv_count = 1.0 / statistic_count.load();
   for (int y = board_start; y <= board_end; y++) {
     for (int x = board_start; x <= board_end; x++) {
       const int pos = POS(x, y);
