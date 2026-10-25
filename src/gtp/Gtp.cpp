@@ -218,7 +218,9 @@ const GTP_command_t gtpcmd[] = {
   { "komi",                 GTP_komi                 },
   { "list_commands",        GTP_listcommands         },
   { "loadsgf",              GTP_loadsgf              },
+#if !defined (RAY_WEB)
   { "lz-analyze",           GTP_lz_analyze           },
+#endif
   { "lz-genmove_analyze",   GTP_lz_genmove_analyze   },
   { "name",                 GTP_name                 },
   { "place_free_handicap",  GTP_fixed_handicap       },
@@ -240,47 +242,69 @@ const GTP_command_t gtpcmd[] = {
  * @brief GTPクライアントのメイン関数
  */
 void
-GTP_main( void )
+GTP_initialize( void )
 {
   game = AllocateGame();
   InitializeBoard(game);
-
-  while (fgets(input, sizeof(input), stdin) != NULL) {
-    char *command;
-    bool nocommand = true;
-    command_id = -1;
-
-    if (isdigit(input[0])) {
-      char buf[BUF_SIZE];
-      STRCPY(buf, BUF_SIZE, input);
-      char *strid = STRTOK(buf, DELIM, &next_token);
-      command_id = atoi(strid);
-      command = STRTOK(nullptr, DELIM, &next_token);
-      int offset = command - buf;
-      STRCPY(input_copy, BUF_SIZE, input + offset);
-    } else {
-      STRCPY(input_copy, BUF_SIZE, input);
-      command = STRTOK(input, DELIM, &next_token);
-    }
-    CHOMP(command);
-
-    for (const GTP_command_t& cmd : gtpcmd) {
-      if (!strcmp(command, cmd.command)) {
-        (*cmd.function)();
-        nocommand = false;
-        break;
-      }
-    }
-
-    if (nocommand) {
-      std::cout << err_command << std::endl << std::endl;
-    }
-
-    fflush(stdin);
-    fflush(stdout);
-  }
 }
 
+
+void
+GTP_exec( const char *line )
+{
+  command_id = -1;
+  if (strlen(line) >= sizeof(input)) {
+    GTP_response("command too long", false);
+    return;
+  }
+  strcpy(input, line);
+  const size_t length = strlen(input);
+  if (length == 0 || strspn(input, " \t\r\n") == length) return;
+  char *command;
+  char buf[BUF_SIZE];
+  bool nocommand = true;
+
+  if (isdigit(input[0])) {
+    STRCPY(buf, BUF_SIZE, input);
+    char *strid = STRTOK(buf, DELIM, &next_token);
+    command_id = atoi(strid);
+    command = STRTOK(nullptr, DELIM, &next_token);
+    if (command == NULL) return;
+    int offset = command - buf;
+    STRCPY(input_copy, BUF_SIZE, input + offset);
+  } else {
+    STRCPY(input_copy, BUF_SIZE, input);
+    command = STRTOK(input, DELIM, &next_token);
+  }
+  if (command == NULL || command[0] == '#') return;
+  CHOMP(command);
+
+  for (const GTP_command_t& cmd : gtpcmd) {
+    if (!strcmp(command, cmd.command)) {
+      (*cmd.function)();
+      nocommand = false;
+      break;
+    }
+  }
+
+  if (nocommand) {
+    std::cout << err_command << std::endl << std::endl;
+  }
+
+  fflush(stdout);
+}
+
+
+void
+GTP_main( void )
+{
+  GTP_initialize();
+  char line[BUF_SIZE];
+  while (fgets(line, sizeof(line), stdin) != NULL) {
+    GTP_exec(line);
+    fflush(stdin);
+  }
+}
 
 /**
  * @~english

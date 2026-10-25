@@ -8,6 +8,57 @@ Ray is a Go (Weiqi, Baduk) game engine based on Monte-Carlo tree search without 
 2. Type 'make' to compile
 3. Place parameter files to ```sim_params``` and ```uct_params``` directories (You can download parameter files from [here](https://github.com/kobanium/Ray/releases))
 
+## WebAssembly build
+
+With the Emscripten SDK activated and the parameter files installed, run:
+
+```sh
+emmake make web -j4
+python3 -m http.server 8000 --directory build/web
+```
+
+Open `http://localhost:8000/`. The build produces `ray.js`, `ray.wasm`,
+`ray.data`, and a sample `index.html` in `build/web/`. Both parameter directories
+are packed into `ray.data` using Emscripten's
+[file preloading](https://emscripten.org/docs/porting/files/packaging_files.html).
+Deploy these four files together. GNU Make 4.3 or newer is required.
+Use `emmake make web WEB_DIR=path/to/output` to select a different output directory.
+The previous `ray-web/` build is kept as a reference.
+
+Define `Module` before loading `ray.js`, then wait for `Module.ready`:
+
+```html
+<script>
+  var Module = {
+    arguments: ['--const-time', '1', '--tree-size', '4096'],
+    print: function(line) { console.log(line); },
+    printErr: function(line) { console.error(line); }
+  };
+</script>
+<script src="ray.js"></script>
+<script>
+  Module.ready.then(function() {
+    Module.GTP_exec('boardsize 9');
+    Module.GTP_exec('play b D4');
+    Module.GTP_exec('genmove w');
+  }).catch(console.error);
+</script>
+```
+
+`Module.GTP_exec()` executes one command synchronously; GTP responses go to
+`Module.print` and diagnostics go to `Module.printErr`. The Web build uses one
+search thread and disables pondering and `lz-analyze`. It can be hosted on a
+normal static HTTP server without cross-origin isolation headers. Search blocks
+the calling JavaScript thread, so use a Web Worker when embedding it in an
+interactive application. Initial WebAssembly memory is 512 MiB and can grow;
+reduce `--tree-size` to limit search memory.
+
+To check parameter loading and GTP move generation under Node.js after building:
+
+```sh
+node web/smoke-test.cjs build/web
+```
+
 # How to run
 When using a GUI that supports GTP (Go Text Protocol), the following command can be used Ray as a engine.
 ```

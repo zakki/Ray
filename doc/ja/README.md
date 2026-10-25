@@ -20,6 +20,38 @@ Windowsでの動作確認はしていません. Linuxで利用する際には下
 
 sim_paramsとuct_paramsの各パラメータファイルは[こちら](https://github.com/kobanium/Ray/releases)からダウンロードして各フォルダに配置してください.
 
+## WebAssembly版
+
+Emscripten SDKを有効にし、パラメータファイルを配置してから実行します。
+GNU Make 4.3以降が必要です。
+
+```sh
+emmake make web -j4
+python3 -m http.server 8000 --directory build/web
+```
+
+`http://localhost:8000/` でGTPコマンドを送信できます。
+`build/web/` に `ray.js`、`ray.wasm`、`ray.data`、サンプルの `index.html` を生成します。
+`sim_params/` と `uct_params/` はEmscriptenの
+[ファイルのプリロード](https://emscripten.org/docs/porting/files/packaging_files.html)で
+`ray.data` にまとめられ、エンジンの初期化前に仮想ファイルシステムへ読み込まれます。
+配信時は4ファイルを同じディレクトリに配置してください。
+`emmake make web WEB_DIR=出力先` で生成先を変更できます。以前の `ray-web/` は参照用として保持します。
+
+組み込み時は `ray.js` を読む前に `Module` を定義し、`Module.ready` の完了後に
+`Module.GTP_exec('genmove b')` のように1コマンドずつ渡します。
+GTP応答は `Module.print`、診断メッセージは `Module.printErr` に出力します。
+設定例は[英語版README](../../README.md#webassembly-build)と `web/index.html` を参照してください。
+
+Web版は単一スレッドで動作し、予測読みと `lz-analyze` を無効にします。
+通常の静的HTTPサーバーで配信でき、cross-origin isolation用のヘッダーは不要です。
+コマンドは同期実行のため、操作画面に組み込む際はWeb Workerで実行してください。
+初期WebAssemblyメモリは512 MiBで、必要に応じて拡張します。
+探索用メモリを抑えるには `--tree-size` を小さく設定してください。
+
+ビルド後、`node web/smoke-test.cjs build/web` でパラメータの読み込みと
+GTPの着手生成を確認できます。
+
 使い方
 ------
 

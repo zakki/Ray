@@ -89,7 +89,11 @@ main( int argc, char **argv )
   //TrainBTModelWithFactorizationMachines();
 
   // GTP
+#if defined (RAY_WEB)
+  GTP_initialize();
+#else
   GTP_main();
+#endif
 
   return 0;
 }

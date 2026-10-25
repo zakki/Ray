@@ -49,6 +49,10 @@ $(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 
 all: clean $(TARGET)
 
+.PHONY: web
+web:
+	$(MAKE) -f web/Makefile
+
 clean:
 	-rm -f *~ $(TARGET) $(OBJECTS) $(SOURCE_DIR)/*~ $(SOURCE_DIR)/*/*~ $(SOURCE_DIR)/*/*/*~ $(SOURCE_DIR)/*/*/*/*~ $(INCLUDE_DIR)/*~ $(INCLUDE_DIR)/*/*~ $(INCLUDE_DIR)/*/*/*~ $(INCLUDE_DIR)/*/*/*/*~
 

@@ -123,4 +123,8 @@ struct GTP_command_t {
 // gtp本体
 void GTP_main( void );
 
+//  GTP initialization and single-command entry point.
+void GTP_initialize( void );
+extern "C" void GTP_exec( const char *line );
+
 #endif

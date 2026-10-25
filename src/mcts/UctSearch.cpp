@@ -326,7 +326,12 @@ GetRootNode( void )
 void
 SetPonderingMode( const bool flag )
 {
+#if defined (RAY_WEB)
+  (void)flag;
+  pondering_mode = false;
+#else
   pondering_mode = flag;
+#endif
 }
 
 
@@ -341,7 +346,12 @@ SetPonderingMode( const bool flag )
 void
 SetThread( const int new_threads )
 {
+#if defined (RAY_WEB)
+  (void)new_threads;
+  threads = 1;
+#else
   threads = new_threads;
+#endif
 }
 
 
@@ -564,6 +574,9 @@ UctSearchGenmove( game_info_t *game, int color, int lz_analysis_cs )
 
   do {
     ExtendSearchTime(mag[mag_count]);
+#if defined (RAY_WEB)
+    ParallelUctSearch(&t_arg[0]);
+#else
     for (int i = 0; i < threads; i++) {
       worker[i] = new std::thread(ParallelUctSearch, &t_arg[i]);
     }
@@ -571,6 +584,7 @@ UctSearchGenmove( game_info_t *game, int color, int lz_analysis_cs )
       worker[i]->join();
       delete worker[i];
     }
+#endif
     mag_count++;
   } while (mag_count < 3 && ExtendTime(uct_node[current_root], game->moves));
 
@@ -1490,13 +1504,19 @@ UctAnalyze( game_info_t *game, int color )
     t_arg[i].game = game;
     t_arg[i].color = color;
     t_arg[i].lz_analysis_cs = -1;
+#if defined (RAY_WEB)
+    ParallelUctSearch(&t_arg[i]);
+#else
     worker[i] = new std::thread(ParallelUctSearch, &t_arg[i]);
+#endif
   }
 
+#if !defined (RAY_WEB)
   for (int i = 0; i < threads; i++) {
     worker[i]->join();
     delete worker[i];
   }
+#endif
 
   int black = 0, white = 0;
 
@@ -1624,13 +1644,19 @@ UctSearchGenmoveCleanUp( game_info_t *game, int color )
     t_arg[i].game = game;
     t_arg[i].color = color;
     t_arg[i].lz_analysis_cs = -1;
+#if defined (RAY_WEB)
+    ParallelUctSearch(&t_arg[i]);
+#else
     worker[i] = new std::thread(ParallelUctSearch, &t_arg[i]);
+#endif
   }
 
+#if !defined (RAY_WEB)
   for (int i = 0; i < threads; i++) {
     worker[i]->join();
     delete worker[i];
   }
+#endif
 
   child_node_t *uct_child = uct_node[current_root].child;
 
